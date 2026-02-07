@@ -7,8 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Sudhir's Clock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+        /* Fonts loaded via link tag in head instead of @import to prevent render blocking */
         *,::before,::after{box-sizing:border-box;margin:0;padding:0}
         :root{
             --bg-1:#06060b;--bg-2:#0e0e18;--bg-3:#161625;--bg-4:#1e1e32;
@@ -40,7 +43,8 @@
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}
 
         /* ═══ ENHANCED LOADER ═══ */
-        .loader{position:fixed;inset:0;z-index:99999;background:var(--bg-1);display:grid;place-content:center;transition:opacity 1s,visibility 1s,transform 1s}.loader.done{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.1)}
+        .loader{position:fixed;inset:0;z-index:99999;background:var(--bg-1);display:grid;place-content:center;transition:opacity 1s,visibility 1s,transform 1s;animation:loaderAutoHide 0.8s ease-out 3s forwards}.loader.done{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.1);animation:none}
+        @keyframes loaderAutoHide{to{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.1)}}
         .loader-inner{text-align:center;position:relative}
         .loader-ring{width:70px;height:70px;margin:0 auto 20px;position:relative}
         .loader-ring::before,.loader-ring::after,.loader-ring-inner{position:absolute;inset:0;border-radius:50%;border:2.5px solid transparent}
@@ -540,7 +544,37 @@
     let lastS=-1;function mainLoop(){updateDigital();const s=new Date().getSeconds();if(s!==lastS){updateWorld();lastS=s}requestAnimationFrame(mainLoop)}
     let resizeT;addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(drawClockFaces,200)},{passive:true});addEventListener('orientationchange',()=>setTimeout(drawClockFaces,350));
     $('#footer-year').textContent=new Date().getFullYear();tmRem=getTmIn();updTmD();updateCurrentBanner();drawClockFaces();rotateClockFaces();mainLoop();initReveal();
-    addEventListener('load',()=>{setTimeout(()=>{$('#loader').classList.add('done');initTilt()},800)});
+    // ═══ ROBUST LOADER DISMISS ═══
+    // Multiple strategies to ensure loader always dismisses
+    let loaderDismissed = false;
+    function dismissLoader() {
+        if (loaderDismissed) return;
+        loaderDismissed = true;
+        const loader = $('#loader');
+        if (loader) {
+            loader.classList.add('done');
+            // Remove from DOM after transition
+            setTimeout(() => { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 1500);
+        }
+        initTilt();
+    }
+    
+    // Strategy 1: On window load (normal case)
+    if (document.readyState === 'complete') {
+        setTimeout(dismissLoader, 300);
+    } else {
+        addEventListener('load', () => setTimeout(dismissLoader, 300));
+    }
+    
+    // Strategy 2: On DOMContentLoaded + short delay (faster)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(dismissLoader, 600));
+    } else {
+        setTimeout(dismissLoader, 600);
+    }
+    
+    // Strategy 3: Hard timeout fallback — ALWAYS dismiss after 2.5s no matter what
+    setTimeout(dismissLoader, 2500);
 })();
 </script>
 </body>
