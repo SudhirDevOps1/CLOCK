@@ -5,13 +5,13 @@
 ### A Stunning, Feature-Rich Analog & Digital Clock Experience
 
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Click_Here-ff6b35?style=for-the-badge&logoColor=white)](https://sudhir-clock.vercel.app)
-[![Version](https://img.shields.io/badge/Version-2.0.0-10b981?style=for-the-badge)](https://github.com/sudhirkumar/clock/releases)
+[![Version](https://img.shields.io/badge/Version-2.0.0-10b981?style=for-the-badge)](https://github.com/SudhirDevOps1/CLOCK/releases)
 [![License](https://img.shields.io/badge/License-MIT-8b5cf6?style=for-the-badge)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/sudhirkumar/clock?style=for-the-badge&color=f59e0b&logo=github)](https://github.com/sudhirkumar/clock)
+[![Stars](https://img.shields.io/github/stars/SudhirDevOps1/CLOCK?style=for-the-badge&color=f59e0b&logo=github)](https://github.com/SudhirDevOps1/CLOCK)
 
 <br>
 
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/hero-preview.png" alt="Sudhir's Clock Preview" width="800">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/hero-preview.png" alt="Sudhir's Clock Preview" width="800">
 
 <br>
 
@@ -142,17 +142,17 @@ Sudhir's Clock isn't just a clock — it's a **visual experience**. Built from s
 <div align="center">
 
 ### 🖥️ Desktop View
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/desktop-preview.png" alt="Desktop" width="700">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/desktop-preview.png" alt="Desktop" width="700">
 
 ### 📱 Mobile View
 <div style="display: flex; gap: 16px; justify-content: center;">
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/mobile-clock.png" alt="Mobile Clock" width="220">
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/mobile-tools.png" alt="Mobile Tools" width="220">
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/mobile-settings.png" alt="Mobile Settings" width="220">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/mobile-clock.png" alt="Mobile Clock" width="220">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/mobile-tools.png" alt="Mobile Tools" width="220">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/mobile-settings.png" alt="Mobile Settings" width="220">
 </div>
 
 ### 🎨 Theme Showcase
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/themes-grid.png" alt="Themes" width="700">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/themes-grid.png" alt="Themes" width="700">
 
 </div>
 
@@ -164,10 +164,10 @@ Sudhir's Clock isn't just a clock — it's a **visual experience**. Built from s
 
 ```bash
 # Clone the repository
-git clone https://github.com/sudhirkumar/clock.git
+git clone https://github.com/SudhirDevOps1/CLOCK.git
 
 # Navigate to directory
-cd clock
+cd CLOCK
 
 # Open in browser (no build step needed!)
 open index.html
@@ -206,7 +206,7 @@ npm install @sudhir/clock
 All themes are powered by CSS custom properties and can be switched instantly:
 
 | Theme | Primary | Secondary | Preview |
-|-------|---------|-----------|---------|
+|-------|---------|-----------|---------| 
 | Ember 🔥 | `#ff6b35` | `#ff8c42` | ![#ff6b35](https://via.placeholder.com/60x20/ff6b35/ff6b35) |
 | Emerald 💚 | `#10b981` | `#34d399` | ![#10b981](https://via.placeholder.com/60x20/10b981/10b981) |
 | Violet 💜 | `#8b5cf6` | `#a78bfa` | ![#8b5cf6](https://via.placeholder.com/60x20/8b5cf6/8b5cf6) |
@@ -247,7 +247,7 @@ Then add a button in the theme grid:
 ### File Structure
 
 ```
-sudhir-clock/
+CLOCK/
 ├── index.html          # Single-file application (HTML + CSS + JS)
 ├── README.md           # This documentation
 ├── LICENSE             # MIT License
@@ -600,8 +600,8 @@ if (d < 15000) { // larger radius (default: 10000 = 100px²)
 
 ```bash
 # Clone
-git clone https://github.com/sudhirkumar/clock.git
-cd clock
+git clone https://github.com/SudhirDevOps1/CLOCK.git
+cd CLOCK
 
 # Start with VS Code Live Server
 # Or use any static server:
@@ -727,11 +727,11 @@ copies or substantial portions of the Software.
 
 <div align="center">
 
-![GitHub repo size](https://img.shields.io/github/repo-size/sudhirkumar/clock?style=flat-square&color=ff6b35)
-![GitHub code size](https://img.shields.io/github/languages/code-size/sudhirkumar/clock?style=flat-square&color=10b981)
-![GitHub last commit](https://img.shields.io/github/last-commit/sudhirkumar/clock?style=flat-square&color=8b5cf6)
-![GitHub issues](https://img.shields.io/github/issues/sudhirkumar/clock?style=flat-square&color=f43f5e)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/sudhirkumar/clock?style=flat-square&color=f59e0b)
+![GitHub repo size](https://img.shields.io/github/repo-size/SudhirDevOps1/CLOCK?style=flat-square&color=ff6b35)
+![GitHub code size](https://img.shields.io/github/languages/code-size/SudhirDevOps1/CLOCK?style=flat-square&color=10b981)
+![GitHub last commit](https://img.shields.io/github/last-commit/SudhirDevOps1/CLOCK?style=flat-square&color=8b5cf6)
+![GitHub issues](https://img.shields.io/github/issues/SudhirDevOps1/CLOCK?style=flat-square&color=f43f5e)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/SudhirDevOps1/CLOCK?style=flat-square&color=f59e0b)
 
 </div>
 
@@ -747,6 +747,6 @@ copies or substantial portions of the Software.
 
 <br>
 
-<img src="https://raw.githubusercontent.com/sudhirkumar/clock/main/assets/footer-wave.svg" alt="wave" width="100%">
+<img src="https://raw.githubusercontent.com/SudhirDevOps1/CLOCK/main/assets/footer-wave.svg" alt="wave" width="100%">
 
 </div>
