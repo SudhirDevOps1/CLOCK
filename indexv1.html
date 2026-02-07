@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudhir's Advanced Clock</title>
+    <style>
+        *, ::before, ::after {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-clr: rgb(3 3 3);
+            --clock-size: 800px;
+            --clock-clr: rgb(12, 74, 110);
+            --clock-numbers-clr: white;
+            --clock-mask-clr: black;
+            --clock-mask-opacity: .85;
+            --clock-mask-inset: 2px;
+            --clock-center-border-clr: rgba(255 255 255 / 0.25);
+            --clock-dialog-bg-clr: rgba(8 47 73 / 0.5);
+            --glow-clr: rgba(0, 200, 255, 0.6);
+            --accent-clr: #00d4ff;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100svh;
+            display: grid;
+            place-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-clr);
+            background-image: radial-gradient(ellipse at center, rgb(8, 47, 73), rgb(2, 15, 25));
+            overflow: hidden;
+        }
+
+        /* ===== PARTICLES CANVAS ===== */
+        #particles-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== HEADER / BRANDING ===== */
+        .branding {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            text-align: center;
+            animation: fadeSlideDown 1.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeSlideDown {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .branding h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: var(--accent-clr);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px var(--glow-clr), 0 0 40px rgba(0, 200, 255, 0.3);
+        }
+
+        .branding .username {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 3px;
+            margin-top: 4px;
+        }
+
+        .branding .username span {
+            color: var(--accent-clr);
+            font-weight: 600;
+        }
+
+        /* ===== FOOTER INFO ===== */
+        .footer-info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            text-align: center;
+            animation: fadeSlideUp 1.5s 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateX(-50%) translateY(30px); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .footer-info .live-date {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .footer-info .live-time-digital {
+            font-size: 2rem;
+            font-weight: 200;
+            color: white;
+            letter-spacing: 4px;
+            text-shadow: 0 0 15px var(--glow-clr);
+            font-variant-numeric: tabular-nums;
+            margin-top: 2px;
+        }
+
+        /* ===== CLOCK ===== */
+        .clock {
+            position: fixed;
+            place-content: center;
+            inset: 0;
+            margin: auto;
+            width: var(--clock-size);
+            height: var(--clock-size);
+            aspect-ratio: 1;
+            background: var(--clock-clr);
+            border-radius: 50%;
+            z-index: 10;
+            animation: clockAppear 2s ease-out forwards;
+            opacity: 0;
+            box-shadow:
+                0 0 60px rgba(0, 200, 255, 0.15),
+                0 0 120px rgba(0, 200, 255, 0.05),
+                inset 0 0 60px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes clockAppear {
+            0% { opacity: 0; transform: scale(0.8) rotate(-10deg); }
+            60% { opacity: 1; transform: scale(1.02) rotate(1deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        /* Outer glow ring */
+        .clock::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0%,
+                var(--accent-clr) 10%,
+                transparent 20%,
+                transparent 50%,
+                var(--accent-clr) 60%,
+                transparent 70%
+            );
+            opacity: 0.2;
+            z-index: -1;
+            animation: glowSpin 8s linear infinite;
+            filter: blur(4px);
+        }
+
+        @keyframes glowSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (width < 800px) {
+            .clock {
+                left: 0;
+                right: auto;
+                translate: calc((50% - 2rem) * -1) 0;
+            }
+        }
+
+        .clock::before {
+            content: "";
+            position: absolute;
+            inset: var(--clock-mask-inset);
+            margin: auto;
+            border-radius: 50%;
+            z-index: 20;
+            clip-path: polygon(0 0, 100% 0, 100% 48%, 50% 48%, 50% 52%, 100% 52%, 100% 100%, 0 100%);
+            background-color: var(--clock-mask-clr);
+            opacity: var(--clock-mask-opacity, .75);
+        }
+
+        .clock > div {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            width: var(--clock-d);
+            height: var(--clock-d);
+            font-size: var(--f-size, 0.9rem);
+            aspect-ratio: 1;
+            isolation: isolate;
+            border-radius: 50%;
+        }
+
+        .clock > div:nth-of-type(1) { --clock-d: calc(var(--clock-size) - 20px); }
+        .clock > div:nth-of-type(2) { --clock-d: calc(var(--clock-size) - 130px); }
+        .clock > div:nth-child(3) { --clock-d: calc(var(--clock-size) - 195px); }
+        .clock > div:nth-child(4) { --clock-d: calc(var(--clock-size) - 260px); }
+        .clock > div:nth-child(5) { --clock-d: calc(var(--clock-size) - 350px); }
+        .clock > div:nth-child(6) { --clock-d: calc(var(--clock-size) - 470px); }
+        .clock > div:nth-child(7) { --clock-d: calc(var(--clock-size) - 600px); }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            transition: 300ms linear;
+        }
+
+        .clock-face > * {
+            position: absolute;
+            transform-origin: center;
+            white-space: nowrap;
+            color: var(--clock-numbers-clr);
+            opacity: 0.75;
+            transition: opacity 0.3s, text-shadow 0.3s, transform 0.3s;
+        }
+
+        .clock-face > *.active {
+            opacity: 1;
+            text-shadow: 0 0 10px var(--glow-clr), 0 0 20px rgba(0, 200, 255, 0.3);
+            font-weight: 700;
+        }
+
+        /* ===== Ring separators between clock faces ===== */
+        .clock > div:nth-of-type(1)::before,
+        .clock > div:nth-of-type(2)::before,
+        .clock > div:nth-child(3)::before,
+        .clock > div:nth-child(4)::before,
+        .clock > div:nth-child(5)::before,
+        .clock > div:nth-child(6)::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 200, 255, 0.08);
+            pointer-events: none;
+        }
+
+        /* ===== CENTER BUTTON ===== */
+        .clock > .current-lang-display {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            z-index: 100;
+            display: grid;
+            place-content: center;
+            background: linear-gradient(135deg, var(--clock-clr), rgb(5, 50, 80));
+            border: 1px solid var(--clock-center-border-clr);
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            aspect-ratio: 1/1;
+            cursor: pointer;
+            transition: 300ms ease-in-out;
+            font-size: 1.5rem;
+            outline: none;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.2); }
+            50% { box-shadow: 0 0 35px rgba(0, 200, 255, 0.4); }
+        }
+
+        .clock > .current-lang-display:focus-visible,
+        .clock > .current-lang-display:hover {
+            background-color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 40px rgba(0, 200, 255, 0.5);
+        }
+
+        .current-lang-display::before,
+        .current-lang-display::after {
+            content: ":";
+            color: var(--clock-numbers-clr);
+            position: absolute;
+            z-index: 199;
+            top: 50%;
+            right: 0;
+            font-size: 0.9rem;
+            translate: 283px -10px;
+            text-shadow: 0 0 8px var(--glow-clr);
+            animation: colonBlink 1s ease-in-out infinite;
+        }
+
+        .current-lang-display::after {
+            font-size: 0.9rem;
+            translate: 250px -10px;
+        }
+
+        @keyframes colonBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ===== DIALOG ===== */
+        dialog {
+            width: min(calc(100% - 2rem), 380px);
+            padding: 1rem;
+            border: none;
+            border-radius: 999px;
+            background: var(--clock-dialog-bg-clr);
+            text-align: center;
+            aspect-ratio: 1;
+            overflow: visible;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 60px rgba(0, 200, 255, 0.15);
+
+            @starting-style {
+                opacity: 0;
+                scale: 0;
+            }
+
+            transition: opacity 500ms ease-in, scale 500ms cubic-bezier(0.28, -0.55, 0.27, 1.55);
+        }
+
+        dialog[open]::backdrop {
+            background-color: rgba(from black r g b / 0.5);
+            backdrop-filter: blur(5px);
+            opacity: 1;
+
+            @starting-style {
+                opacity: 0;
+            }
+
+            transition: opacity 1000ms ease-in;
+        }
+
+        dialog .btn-dialog-close {
+            position: absolute;
+            top: 0rem;
+            right: 25%;
+            aspect-ratio: 1;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--clock-dialog-bg-clr);
+            font-size: 1.2rem;
+            color: white;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            transition: rotate 300ms ease-in-out, background 300ms;
+            z-index: 11;
+        }
+
+        dialog .btn-dialog-close:focus-visible,
+        dialog .btn-dialog-close:hover {
+            rotate: 90deg;
+            background: rgba(255, 80, 80, 0.3);
+        }
+
+        .language-options {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+        }
+
+        .language-options > label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            font-size: 0.9rem;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            transition: 300ms ease-in-out;
+            display: grid;
+            place-content: center;
+            transform-origin: center;
+        }
+
+        .language-options > label.active {
+            color: white;
+            background: var(--clock-clr);
+            box-shadow: 0 0 15px var(--glow-clr);
+        }
+
+        .language-options > label:focus-visible,
+        .language-options > label:hover {
+            scale: 1.3;
+            z-index: 2;
+            filter: drop-shadow(0 0 8px var(--glow-clr));
+        }
+
+        .language-title {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            color: white;
+            font-size: 1.2rem;
+
+            @starting-style {
+                opacity: 0;
+            }
+
+            transition: opacity 300ms ease-in-out;
+        }
+
+        .flag-icon {
+            font-size: 1.5rem;
+            display: grid;
+            place-content: center;
+        }
+
+        .language-options input[type="radio"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            border: 0;
+            clip: rect(0, 0, 0, 0);
+            overflow: hidden;
+        }
+
+        /* ===== TOOLTIP ===== */
+        .tooltip {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 300;
+            background: rgba(0, 200, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 18px;
+            color: white;
+            font-size: 0.85rem;
+            max-width: 250px;
+            animation: tooltipIn 0.8s 3s ease-out forwards, tooltipOut 0.8s 10s ease-in forwards;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        @keyframes tooltipIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes tooltipOut {
+            to { opacity: 0; transform: translateX(20px); }
+        }
+
+        .tooltip::before {
+            content: "💡";
+            margin-right: 6px;
+        }
+
+        /* ===== AMBIENT LIGHT ORB ===== */
+        .ambient-orb {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.08), transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            animation: orbFloat 12s ease-in-out infinite;
+        }
+
+        .ambient-orb:nth-child(1) {
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .ambient-orb:nth-child(2) {
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -4s;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0, 100, 255, 0.06), transparent 70%);
+        }
+
+        .ambient-orb:nth-child(3) {
+            top: 50%;
+            left: -150px;
+            animation-delay: -8s;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(0, 255, 200, 0.05), transparent 70%);
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -20px) scale(1.1); }
+            50% { transform: translate(-20px, 30px) scale(0.9); }
+            75% { transform: translate(20px, 20px) scale(1.05); }
+        }
+
+        /* ===== LOADING SCREEN ===== */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgb(2, 15, 25);
+            display: grid;
+            place-content: center;
+            transition: opacity 1s ease-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(0, 200, 255, 0.1);
+            border-top-color: var(--accent-clr);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div>
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Clock...</div>
+        </div>
+    </div>
+
+    <!-- Particles -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Ambient Light Orbs -->
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+    <div class="ambient-orb"></div>
+
+    <!-- Branding -->
+    <div class="branding">
+        <h1>Sudhir Kumar</h1>
+        <div class="username">@<span>sudhir</span> — Advanced Clock</div>
+    </div>
+
+    <!-- Footer with digital time -->
+    <div class="footer-info">
+        <div class="live-date" id="live-date"></div>
+        <div class="live-time-digital" id="live-time-digital"></div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip">Click the center flag to change language & locale</div>
+
+    <!-- Clock -->
+    <div class="clock" data-date="2024-12-25">
+        <div>
+            <div data-clock="years" data-numbers="101" class="clock-face"></div>
+        </div>
+        <div>
+            <div data-clock="seconds" data-numbers="60" class="clock-face"></div>
+        </div>
+        <div>
+            <div data-clock="minutes" data-numbers="60" class="clock-face"></div>
+        </div>
+        <div>
+            <div data-clock="hours" data-numbers="24" class="clock-face"></div>
+        </div>
+        <div>
+            <div data-clock="days" data-numbers="31" class="clock-face"></div>
+        </div>
+        <div>
+            <div data-clock="months" data-numbers="12" class="clock-face"></div>
+        </div>
+        <div>
+            <div data-clock="day-names" data-numbers="7" class="clock-face"></div>
+        </div>
+        <button type="button" id="current-lang" class="current-lang-display">en</button>
+    </div>
+
+    <dialog id="language-dialog">
+        <button type="button" id="btn-dialog-close" class="btn-dialog-close" autofocus>&#10005;</button>
+        <div id="language-options" class="language-options"></div>
+    </dialog>
+
+    <script>
+        // ===== PARTICLES SYSTEM =====
+        (function() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const PARTICLE_COUNT = 80;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.speedY = (Math.random() - 0.5) * 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                    this.pulse = Math.random() * Math.PI * 2;
+                    this.pulseSpeed = Math.random() * 0.02 + 0.005;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.pulse += this.pulseSpeed;
+                    if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                        this.reset();
+                    }
+                }
+                draw() {
+                    const o = this.opacity * (0.5 + 0.5 * Math.sin(this.pulse));
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0, 200, 255, ${o})`;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(0, 200, 255, ${0.05 * (1 - dist / 120)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                drawLines();
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+        })();
+
+        // ===== LANGUAGE DATA =====
+        const languageFlags = [
+            { code: 'ar-SA', name: 'Arabic (Saudi Arabia)', flag: '🇸🇦' },
+            { code: 'cs-CZ', name: 'Czech (Czech Republic)', flag: '🇨🇿' },
+            { code: 'da-DK', name: 'Danish (Denmark)', flag: '🇩🇰' },
+            { code: 'de-DE', name: 'German (Germany)', flag: '🇩🇪' },
+            { code: 'el-GR', name: 'Greek (Greece)', flag: '🇬🇷' },
+            { code: 'en-US', name: 'English (US)', flag: '🇺🇸' },
+            { code: 'en-GB', name: 'English (UK)', flag: '🇬🇧' },
+            { code: 'es-ES', name: 'Spanish (Spain)', flag: '🇪🇸' },
+            { code: 'es-MX', name: 'Spanish (Mexico)', flag: '🇲🇽' },
+            { code: 'fi-FI', name: 'Finnish (Finland)', flag: '🇫🇮' },
+            { code: 'fr-CA', name: 'French (Canada)', flag: '🇨🇦' },
+            { code: 'fr-FR', name: 'French (France)', flag: '🇫🇷' },
+            { code: 'he-IL', name: 'Hebrew (Israel)', flag: '🇮🇱' },
+            { code: 'hi-IN', name: 'Hindi (India)', flag: '🇮🇳' },
+            { code: 'hu-HU', name: 'Hungarian (Hungary)', flag: '🇭🇺' },
+            { code: 'it-IT', name: 'Italian (Italy)', flag: '🇮🇹' },
+            { code: 'ja-JP', name: 'Japanese (Japan)', flag: '🇯🇵' },
+            { code: 'ko-KR', name: 'Korean (South Korea)', flag: '🇰🇷' },
+            { code: 'nl-NL', name: 'Dutch (Netherlands)', flag: '🇳🇱' },
+            { code: 'no-NO', name: 'Norwegian (Norway)', flag: '🇳🇴' },
+            { code: 'pl-PL', name: 'Polish (Poland)', flag: '🇵🇱' },
+            { code: 'pt-BR', name: 'Portuguese (Brazil)', flag: '🇧🇷' },
+            { code: 'pt-PT', name: 'Portuguese (Portugal)', flag: '🇵🇹' },
+            { code: 'ro-RO', name: 'Romanian (Romania)', flag: '🇷🇴' },
+            { code: 'ru-RU', name: 'Russian (Russia)', flag: '🇷🇺' },
+            { code: 'sv-SE', name: 'Swedish (Sweden)', flag: '🇸🇪' },
+            { code: 'th-TH', name: 'Thai (Thailand)', flag: '🇹🇭' },
+            { code: 'tr-TR', name: 'Turkish (Turkey)', flag: '🇹🇷' },
+            { code: 'vi-VN', name: 'Vietnamese (Vietnam)', flag: '🇻🇳' },
+            { code: 'zh-CN', name: 'Chinese (Simplified, China)', flag: '🇨🇳' },
+        ];
+
+        const RADIUS = 140;
+
+        const defaultRegions = languageFlags.reduce((map, lang) => {
+            const baseLang = lang.code.split('-')[0];
+            if (!map[baseLang]) map[baseLang] = lang.code;
+            return map;
+        }, {});
+
+        function getLocale() {
+            let language = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
+            if (language.length === 2) {
+                language = defaultRegions[language] || `${language}-${language.toUpperCase()}`;
+            }
+            return language;
+        }
+
+        let locale = getLocale();
+
+        const currentLangDisplay = document.getElementById('current-lang');
+        const languageDialog = document.getElementById('language-dialog');
+        const languageOptionsContainer = document.getElementById('language-options');
+        const closeButton = document.getElementById('btn-dialog-close');
+
+        // ===== DIGITAL TIME DISPLAY =====
+        function updateDigitalTime() {
+            const now = new Date();
+            const timeEl = document.getElementById('live-time-digital');
+            const dateEl = document.getElementById('live-date');
+
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const sep = now.getSeconds() % 2 === 0 ? ':' : ' ';
+            timeEl.textContent = `${h}${sep}${m}${sep}${s}`;
+
+            dateEl.textContent = new Intl.DateTimeFormat(locale, {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            }).format(now);
+
+            requestAnimationFrame(updateDigitalTime);
+        }
+        updateDigitalTime();
+
+        // ===== CLOCK FACES =====
+        function drawClockFaces() {
+            const clockFaces = document.querySelectorAll('.clock-face');
+            const currentDate = new Date();
+            const currentDay = currentDate.getDate();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            const currentWeekday = currentDate.getDay();
+            const currentHours = currentDate.getHours();
+            const currentMinutes = currentDate.getMinutes();
+            const currentSeconds = currentDate.getSeconds();
+            const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            const weekdayNames = Array.from({ length: 7 }, (_, i) =>
+                new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(2021, 0, i + 3))
+            );
+            const monthNames = Array.from({ length: 12 }, (_, i) =>
+                new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2021, i))
+            );
+
+            clockFaces.forEach(clockFace => {
+                clockFace.innerHTML = '';
+                const clockType = clockFace.getAttribute('data-clock');
+                const numbers = parseInt(clockFace.getAttribute('data-numbers'), 10);
+                const R = (clockFace.offsetWidth / 2) - 20;
+                const center = clockFace.offsetWidth / 2;
+
+                let valueSet, currentValue;
+
+                switch (clockType) {
+                    case 'seconds':
+                        valueSet = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+                        currentValue = String(currentSeconds).padStart(2, '0');
+                        break;
+                    case 'minutes':
+                        valueSet = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+                        currentValue = String(currentMinutes).padStart(2, '0');
+                        break;
+                    case 'hours':
+                        valueSet = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+                        currentValue = String(currentHours).padStart(2, '0');
+                        break;
+                    case 'days':
+                        valueSet = Array.from({ length: totalDaysInMonth }, (_, i) => i + 1);
+                        currentValue = currentDay;
+                        break;
+                    case 'months':
+                        valueSet = monthNames;
+                        currentValue = currentMonth;
+                        break;
+                    case 'years':
+                        valueSet = Array.from({ length: 101 }, (_, i) => 2000 + i);
+                        currentValue = currentYear;
+                        break;
+                    case 'day-names':
+                        valueSet = weekdayNames;
+                        currentValue = currentWeekday;
+                        break;
+                    default:
+                        return;
+                }
+
+                valueSet.forEach((value, i) => {
+                    const angle = (i * (360 / numbers));
+                    const x = center + R * Math.cos((angle * Math.PI) / 180);
+                    const y = center + R * Math.sin((angle * Math.PI) / 180);
+
+                    const element = document.createElement('span');
+                    element.classList.add('number');
+                    element.textContent = value;
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
+                    element.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                    clockFace.appendChild(element);
+                });
+
+                const currentIndex = valueSet.indexOf(
+                    typeof valueSet[0] === 'string' ? String(currentValue) : currentValue
+                );
+                const rotationAngle = -((currentIndex / numbers) * 360);
+                clockFace.style.transform = `rotate(${rotationAngle}deg)`;
+            });
+        }
+
+        function rotateClockFaces() {
+            const clockFaces = document.querySelectorAll('.clock-face');
+            const lastAngles = {};
+
+            function updateRotations() {
+                const now = new Date();
+                const currentSecond = now.getSeconds();
+                const currentMinute = now.getMinutes();
+                const currentHour = now.getHours();
+                const currentDay = now.getDate();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                const currentWeekday = now.getDay();
+
+                clockFaces.forEach(clockFace => {
+                    const clockType = clockFace.getAttribute('data-clock');
+                    const totalNumbers = parseInt(clockFace.getAttribute('data-numbers'), 10);
+
+                    let currentValue;
+                    switch (clockType) {
+                        case 'seconds': currentValue = currentSecond; break;
+                        case 'minutes': currentValue = currentMinute; break;
+                        case 'hours': currentValue = currentHour; break;
+                        case 'days': currentValue = currentDay - 1; break;
+                        case 'months': currentValue = currentMonth; break;
+                        case 'years': currentValue = currentYear - 2000; break;
+                        case 'day-names': currentValue = currentWeekday; break;
+                        default: return;
+                    }
+
+                    const targetAngle = (360 / totalNumbers) * currentValue;
+                    const clockId = clockFace.id || clockType;
+                    const lastAngle = lastAngles[clockId] || 0;
+                    const delta = targetAngle - lastAngle;
+                    const shortestDelta = ((delta + 540) % 360) - 180;
+                    const newAngle = lastAngle + shortestDelta;
+
+                    clockFace.style.transform = `rotate(${newAngle * -1}deg)`;
+                    lastAngles[clockId] = newAngle;
+
+                    const numbers = clockFace.querySelectorAll('.number');
+                    numbers.forEach((number, index) => {
+                        if (index === currentValue) {
+                            number.classList.add('active');
+                        } else {
+                            number.classList.remove('active');
+                        }
+                    });
+                });
+                requestAnimationFrame(updateRotations);
+            }
+            updateRotations();
+        }
+
+        // ===== LANGUAGE OPTIONS =====
+        function createLanguageOptions() {
+            const centerX = languageOptionsContainer.offsetWidth / 2;
+            const centerY = languageOptionsContainer.offsetHeight / 2;
+
+            languageFlags.forEach((lang, index, arr) => {
+                const angle = (index / arr.length) * 2 * Math.PI;
+                const x = centerX + RADIUS * Math.cos(angle);
+                const y = centerY + RADIUS * Math.sin(angle);
+
+                const radioWrapper = document.createElement('label');
+                radioWrapper.title = lang.name;
+                radioWrapper.style.left = `${x}px`;
+                radioWrapper.style.top = `${y}px`;
+
+                const radioInput = document.createElement('input');
+                radioInput.type = 'radio';
+                radioInput.name = 'language';
+                radioInput.value = lang.code;
+
+                if (lang.code === locale) {
+                    radioInput.checked = true;
+                    radioWrapper.classList.add('active');
+                }
+
+                const flag = document.createElement('span');
+                flag.classList.add('flag-icon');
+                flag.innerText = lang.flag;
+
+                radioWrapper.appendChild(radioInput);
+                radioWrapper.appendChild(flag);
+                languageOptionsContainer.appendChild(radioWrapper);
+
+                radioWrapper.addEventListener('mouseover', () => showTitle(lang.name));
+                radioWrapper.addEventListener('mouseleave', () => hideTitle());
+
+                radioInput.addEventListener('change', () => {
+                    locale = radioInput.value;
+                    setCurrentLangDisplay(lang);
+                    drawClockFaces();
+                    document.querySelector('label.active')?.classList.remove('active');
+                    radioWrapper.classList.add('active');
+                    closeDialog();
+                });
+            });
+        }
+
+        let titleDisplay = null;
+        function showTitle(languageName) {
+            if (titleDisplay) titleDisplay.remove();
+            titleDisplay = document.createElement('div');
+            titleDisplay.classList.add('language-title');
+            titleDisplay.textContent = languageName;
+            languageOptionsContainer.appendChild(titleDisplay);
+        }
+
+        function hideTitle() {
+            if (titleDisplay) titleDisplay.textContent = '';
+        }
+
+        function setCurrentLangDisplay(lang) {
+            currentLangDisplay.textContent = lang.flag;
+            currentLangDisplay.title = lang.name;
+            showTitle(lang.name);
+        }
+
+        function openDialog() {
+            languageDialog.showModal();
+            createLanguageOptions();
+            addDialogCloseListener();
+        }
+
+        function closeDialog() {
+            languageDialog.close();
+            removeLanguageOptions();
+            removeDialogCloseListener();
+        }
+
+        function removeLanguageOptions() {
+            languageOptionsContainer.innerHTML = '';
+        }
+
+        function addDialogCloseListener() {
+            languageDialog.addEventListener('click', closeDialogOnClickOutside);
+        }
+
+        function removeDialogCloseListener() {
+            languageDialog.removeEventListener('click', closeDialogOnClickOutside);
+        }
+
+        function closeDialogOnClickOutside(e) {
+            if (e.target === languageDialog) closeDialog();
+        }
+
+        closeButton.addEventListener('click', closeDialog);
+        currentLangDisplay.addEventListener('click', openDialog);
+
+        // ===== LOADING SCREEN =====
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 1200);
+        });
+
+        // ===== INITIALIZE =====
+        drawClockFaces();
+        rotateClockFaces();
+        const matchedLang = languageFlags.find(lang => lang.code === locale);
+        if (matchedLang) {
+            setCurrentLangDisplay(matchedLang);
+        } else {
+            setCurrentLangDisplay(languageFlags.find(lang => lang.code === 'en-US'));
+        }
+    </script>
+</body>
+</html>
